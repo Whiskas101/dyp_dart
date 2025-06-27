@@ -8,6 +8,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  html: ^0.15.6
   http: ^1.4.0
   shelf: ^1.4.2
   shelf_cors_headers: ^0.1.5

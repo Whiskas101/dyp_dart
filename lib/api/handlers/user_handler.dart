@@ -1,20 +1,7 @@
-import 'dart:io';
-import 'dart:mirrors';
-
+import 'package:dyp_dart/api/parser/parser.dart';
 import 'package:shelf/shelf.dart';
 import 'package:dyp_dart/api/secrets/SITE.dart' as SITE;
 import 'package:http/http.dart' as http;
-// utility function to help parse the Stream result of request body as JSON
-// Future<Map<String, dynamic>?> readAsJSON(Request request) async {
-//   final body = await request.readAsString();
-//
-//   try {
-//     final jsonBody = jsonDecode(body);
-//     return jsonBody;
-//   } catch (e) {
-//     throw FormatException("Invalid JSON: $e");
-//   }
-// }
 
 // A simple class to manage and help propagate
 // cookies that are received when redirected or otherwise
@@ -55,8 +42,6 @@ class CookieStore {
 CookieStore store = CookieStore();
 
 Future<Response> login(Request request) async {
-  // debugLoginRequest();
-  // return Response.ok('what');
   final body = await request.readAsString();
 
   try {
@@ -78,16 +63,6 @@ Future<Response> login(Request request) async {
 
     // Make a login request to the LMS site
     final client = http.Client();
-
-    // http.Response res = await client.post(
-    //   SITE.AUTH_URL,
-    //   body: userData,
-    //   headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    // );
-
-    // final streamed = await client.send(request);
-
-    // print('raw status: ${streamed.statusCode}');
 
     final streamed = await client.send(req);
     // print('streamed headers: ${streamed.headers}');
@@ -116,12 +91,15 @@ Future<Response> getSubjects(Request request) async {
 
   final client = http.Client();
 
+  //TODO: Add try and catch block and handle failure case with correst response
+  // codes
   final streamed = await client.send(req);
   final res = await http.Response.fromStream(streamed);
   print(res.toString());
-  print(res.body.toString());
+  String htmlResponse = res.body.toString();
 
-  return Response.ok("");
+  String subjects = parseSubjects(htmlResponse);
+  return Response.ok(subjects);
 }
 
 Future<Response> getMaterials(Request request) async {
@@ -146,14 +124,14 @@ Future<Response> getMaterials(Request request) async {
 
     final streamed = await client.send(req);
     final res = await http.Response.fromStream(streamed);
-    print(res.toString());
-    print(res.body.toString());
-    // TODO: add a parser and return json
+    String htmlResponse = res.body.toString();
+
+    String materials = parseMaterials(htmlResponse);
+
+    return Response.ok(materials);
   } catch (err) {
     return Response.internalServerError(body: "Something went wrong");
   }
-
-  return Response.ok("");
 }
 
 Future<Response> getDownloadLink(Request request) async {
@@ -162,26 +140,61 @@ Future<Response> getDownloadLink(Request request) async {
   try {
     final data = Uri.splitQueryString(body);
     final targetLink = data['link'];
+    final linkType = data['type'];
 
-    if (targetLink == null) {
-      Response.badRequest(body: "Missing link parameter!");
+    if (targetLink == null || linkType == null) {
+      return Response.badRequest(body: "Missing link/type parameter!");
     }
 
-    final targetUri = Uri.parse(targetLink!);
+    final targetUri = Uri.parse(targetLink);
 
     http.Request req = http.Request('GET', targetUri)
       ..headers.addAll({
         'Cookie': store.MoodleSessionCookie,
       });
 
-    // TODO: add a parser and return json
+    final client = http.Client();
+
+    final streamed = await client.send(req);
+    final res = await http.Response.fromStream(streamed);
+    // print(res.body.toString());
+    String htmlResponse = res.body.toString();
+
+    String downloadLink = parseResourceLink(htmlResponse, linkType);
+    print(downloadLink);
+
+    if (downloadLink.isEmpty) {
+      return Response.internalServerError(
+          body: "Could not parse the download link!");
+    }
+
+    return Response.ok(downloadLink);
+
+    //
+  } catch (err) {
+    return Response.internalServerError(body: "Something went wrong");
+  }
+}
+
+// jsonified timetable
+Future<Response> getTimetable(Request request) async {
+  try {
+    http.Request req = http.Request('GET', SITE.TIMETABLE_URL)
+      ..headers.addAll({
+        'Cookie': store.MoodleSessionCookie,
+      });
+
     final client = http.Client();
 
     final streamed = await client.send(req);
     final res = await http.Response.fromStream(streamed);
     print(res.toString());
-    print(res.body.toString());
 
+    final htmlResponse = res.body.toString();
+
+    final String timetable = parseTimetable(htmlResponse);
+
+    return Response.ok(timetable);
     //
   } catch (err) {
     return Response.internalServerError(body: "Something went wrong");
@@ -189,6 +202,7 @@ Future<Response> getDownloadLink(Request request) async {
   return Response.ok("{'fuc':'isthis'}");
 }
 
+// json object contained computed data about how many classes you can skip
 Future<Response> getAttendanceSummary(Request request) async {
   try {
     http.Request req = http.Request('GET', SITE.ATTENDANCE_URL)
@@ -196,14 +210,17 @@ Future<Response> getAttendanceSummary(Request request) async {
         'Cookie': store.MoodleSessionCookie,
       });
 
-    // TODO: add a parser and return json
     final client = http.Client();
 
     final streamed = await client.send(req);
     final res = await http.Response.fromStream(streamed);
     print(res.toString());
-    print(res.body.toString());
 
+    final htmlResponse = res.body.toString();
+
+    final String attendanceSummary = parseAttendance(htmlResponse);
+
+    return Response.ok(attendanceSummary);
     //
   } catch (err) {
     return Response.internalServerError(body: "Something went wrong");

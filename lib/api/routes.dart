@@ -7,4 +7,5 @@ final appRoutes = Router()
   ..post('/login', login)
   ..post('/materials', getMaterials)
   ..post('/download', getDownloadLink)
-  ..get('/attendance', getAttendanceSummary);
+  ..get('/attendance', getAttendanceSummary)
+  ..get('/timetable', getTimetable);
