@@ -78,7 +78,7 @@ Future<Response> login(Request request) async {
         store.storeFromResponse(res);
         // 1. Extract just the session ID value from the full cookie string.
         // e.g., from "MoodleSession=abcde12345; path=/rait/" we get "abcde12345"
-        // print("response cookies: ${responseCookies}");
+        print("LOCAL SERVER: response cookies: ${responseCookies}");
         // FOR SOME GODDAMN WEIRD REASON, TWO OF THE SAME COOKIES ARE SENT BACK, & OVERWRITTEN INSTANTLY.
         // Extract the SECOND one to actually have a valid session cookie returned to the application
         final sessionValue = responseCookies.split(';')[1].split('=').last;
