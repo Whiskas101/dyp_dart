@@ -13,11 +13,11 @@ class MyHttpOverrides extends HttpOverrides {
         print(
             '⚠️ Server Isolate: Accepting self-signed certificate from $host');
         return true;
-      }
-      ..findProxy = (uri) {
-        print('🔁 Server Isolate: Routing $uri through mitmproxy...');
-        return "PROXY 127.0.0.1:8080";
       };
+      // ..findProxy = (uri) {
+      //   print('🔁 Server Isolate: Routing $uri through mitmproxy...');
+      //   return "PROXY 127.0.0.1:8080";
+      // };
   }
 }
 
