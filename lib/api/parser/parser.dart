@@ -69,6 +69,20 @@ String parseResourceLink(String html, String linkType) {
 
   String? extractedLink;
 
+  String genResponse(extractedLink) {
+    if (extractedLink != null && extractedLink.isNotEmpty) {
+      final start = extractedLink.lastIndexOf('/') + 1;
+      final name = extractedLink.substring(start);
+      final content = {
+        'name': name,
+        'link': extractedLink,
+      };
+      return jsonEncode(content);
+    }
+
+    throw Error();
+  }
+
   print("\n\n\nLinktype: $linkType");
 
   for (final script in doc.querySelectorAll('script')) {
@@ -79,25 +93,17 @@ String parseResourceLink(String html, String linkType) {
       print("Match:  ${match?.group(1)}");
       if (match != null) {
         extractedLink = match.group(1);
+        return genResponse(extractedLink);
         break;
       }
     }
   }
 
-  // if (['resource', 'presentation', 'dyquestion', 'questionpaper']
-  //     .contains(linkType)) {
-  //   final main = doc.querySelector('[role="main"]');
-  //   extractedLink = main?.querySelector('a')?.attributes['href'];
-  // }
-
-  if (extractedLink != null && extractedLink.isNotEmpty) {
-    final start = extractedLink.lastIndexOf('/') + 1;
-    final name = extractedLink.substring(start);
-    final content = {
-      'name': name,
-      'link': extractedLink,
-    };
-    return jsonEncode(content);
+  if (['resource', 'presentation', 'dyquestion', 'questionpaper']
+      .contains(linkType)) {
+    final main = doc.querySelector('[role="main"]');
+    extractedLink = main?.querySelector('a')?.attributes['href'];
+    return genResponse(extractedLink);
   }
 
   return jsonEncode(null); // fallback if link is not found
@@ -106,7 +112,6 @@ String parseResourceLink(String html, String linkType) {
 // so annoying to write
 // returns a jsonified timetable
 String parseTimetable(String html) {
-  print(html);
   final doc = parse(html);
 
   final output = <String, dynamic>{};
