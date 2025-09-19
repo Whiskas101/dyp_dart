@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dyp_dart/api/parser/parser.dart';
 import 'package:shelf/shelf.dart';
 import 'package:dyp_dart/api/secrets/SITE.dart' as SITE;
@@ -71,10 +73,27 @@ Future<Response> login(Request request) async {
     print(res.statusCode);
     if ((res.statusCode == 303)) {
       final responseCookies = res.headers['set-cookie'];
+
       if (responseCookies != null) {
-        store.storeFromResponse(res);
-        print(store.MoodleSessionCookie);
-        return Response.ok("Logged in!");
+        // 1. Extract just the session ID value from the full cookie string.
+        // e.g., from "MoodleSession=abcde12345; path=/rait/" we get "abcde12345"
+        final sessionValue = responseCookies.split(';').first.split('=').last;
+
+        // 2. Create the JSON payload that the client expects.
+        final responsePayload = {
+          'MoodleSession': sessionValue,
+        };
+
+        final String jsonBody = jsonEncode(responsePayload);
+
+        // 3. Prepare the headers for the client, passing through the original cookie.
+        final responseHeaders = {
+          'Content-Type': 'application/json',
+          'set-cookie': responseCookies,
+        };
+
+        // 4. Return the complete response object.
+        return Response.ok(jsonBody, headers: responseHeaders);
       }
     }
     return Response.forbidden("Failed to login!");

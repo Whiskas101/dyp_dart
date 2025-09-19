@@ -4,8 +4,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'routes.dart'; // Your routes file
 
-// 1. Your MyHttpOverrides class is now here.
-//    It will be used by any HttpClient created within this isolate.
+
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -22,13 +21,9 @@ class MyHttpOverrides extends HttpOverrides {
   }
 }
 
-// The all-in-one entry point for the isolate.
 Future<void> serverEntryPoint(SendPort mainSendPort) async {
-  // 2. Set the global HttpOverrides for this isolate.
-  //    This is the first thing we do.
   HttpOverrides.global = MyHttpOverrides();
 
-  // --- The rest of the function is the same as before ---
 
   final commandPort = ReceivePort();
   HttpServer? server;
@@ -54,3 +49,6 @@ Future<void> serverEntryPoint(SendPort mainSendPort) async {
 
   print('🛑 Server isolate finished.');
 }
+
+
+
