@@ -69,25 +69,26 @@ String parseResourceLink(String html, String linkType) {
 
   String? extractedLink;
 
-  if (linkType == "flexpaper") {
-    for (final script in doc.querySelectorAll('script')) {
-      final text = script.text;
-      if (text.contains('FlexPaperViewer')) {
-        final regex = RegExp(r"PDFFile\s*:\s*'([^']+)'");
-        final match = regex.firstMatch(text);
-        if (match != null) {
-          extractedLink = match.group(1);
-          break;
-        }
+  print("\n\n\nLinktype: $linkType");
+
+  for (final script in doc.querySelectorAll('script')) {
+    final text = script.text;
+    if (text.contains('FlexPaperViewer')) {
+      final regex = RegExp(r"PDFFile\s*:\s*'([^']+)'");
+      final match = regex.firstMatch(text);
+      print("Match:  ${match?.group(1)}");
+      if (match != null) {
+        extractedLink = match.group(1);
+        break;
       }
     }
   }
 
-  if (['resource', 'presentation', 'dyquestion', 'questionpaper']
-      .contains(linkType)) {
-    final main = doc.querySelector('[role="main"]');
-    extractedLink = main?.querySelector('a')?.attributes['href'];
-  }
+  // if (['resource', 'presentation', 'dyquestion', 'questionpaper']
+  //     .contains(linkType)) {
+  //   final main = doc.querySelector('[role="main"]');
+  //   extractedLink = main?.querySelector('a')?.attributes['href'];
+  // }
 
   if (extractedLink != null && extractedLink.isNotEmpty) {
     final start = extractedLink.lastIndexOf('/') + 1;
