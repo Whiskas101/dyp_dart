@@ -75,6 +75,7 @@ Future<Response> login(Request request) async {
       final responseCookies = res.headers['set-cookie'];
 
       if (responseCookies != null) {
+        store.storeFromResponse(res);
         // 1. Extract just the session ID value from the full cookie string.
         // e.g., from "MoodleSession=abcde12345; path=/rait/" we get "abcde12345"
         final sessionValue = responseCookies.split(';').first.split('=').last;
